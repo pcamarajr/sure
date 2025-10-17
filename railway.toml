@@ -1,0 +1,15 @@
+[build]
+builder = "dockerfile"
+
+[deploy]
+startCommand = "bundle exec rails server"
+
+[[services]]
+name = "web"
+[services.deploy]
+startCommand = "bundle exec rails server -b 0.0.0.0 -p $PORT"
+
+[[services]]
+name = "worker"
+[services.deploy]
+startCommand = "bundle exec sidekiq"

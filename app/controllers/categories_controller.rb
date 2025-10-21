@@ -4,7 +4,9 @@ class CategoriesController < ApplicationController
   before_action :set_transaction, only: :create
 
   def index
-    @categories = Current.family.categories.alphabetically
+    @categories = Current.family.categories
+      .includes(:subcategories)
+      .alphabetically
 
     render layout: "settings"
   end
@@ -38,15 +40,29 @@ class CategoriesController < ApplicationController
 
   def update
     if @category.update(category_params)
-      flash[:notice] = t(".success")
-
-      redirect_target_url = request.referer || categories_path
       respond_to do |format|
-        format.html { redirect_back_or_to categories_path, notice: t(".success") }
-        format.turbo_stream { render turbo_stream: turbo_stream.action(:redirect, redirect_target_url) }
+        format.html {
+          flash[:notice] = t(".success")
+          redirect_back_or_to categories_path
+        }
+        format.turbo_stream {
+          # For inline editing, return success stream
+          render turbo_stream: [
+            turbo_stream.replace(@category, partial: "categories/category_row", locals: { category: @category }),
+            turbo_stream.prepend("flash", partial: "shared/flash", locals: { notice: t(".success") })
+          ]
+        }
       end
     else
-      render :edit, status: :unprocessable_entity
+      respond_to do |format|
+        format.html { render :edit, status: :unprocessable_entity }
+        format.turbo_stream {
+          render turbo_stream: turbo_stream.prepend("flash",
+            partial: "shared/flash",
+            locals: { alert: @category.errors.full_messages.to_sentence }
+          ), status: :unprocessable_entity
+        }
+      end
     end
   end
 

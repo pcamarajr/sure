@@ -10,11 +10,15 @@
   <div class="shadow-border-xs rounded-lg bg-container">
     <div class="overflow-hidden rounded-lg">
       <% Category::Group.for(categories).each_with_index do |group, idx| %>
-        <%= render group.category %>
+        <!-- Parent category -->
+        <%= render "categories/category_row", category: group.category %>
 
-        <% group.subcategories.each do |subcategory| %>
-          <%= render subcategory %>
-        <% end %>
+        <!-- Subcategories (initially visible, will be controlled by expand/collapse) -->
+        <div class="subcategories-container" data-parent-id="<%= group.category.id %>">
+          <% group.subcategories.each do |subcategory| %>
+            <%= render "categories/category_row", category: subcategory %>
+          <% end %>
+        </div>
 
         <% unless idx == Category::Group.for(categories).count - 1 %>
           <%= render "shared/ruler" %>

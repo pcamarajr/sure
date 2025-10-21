@@ -1,0 +1,98 @@
+<%# locals: (category:) %>
+
+<div 
+  id="<%= dom_id(category) %>" 
+  class="group flex items-center gap-3 px-4 py-3 hover:bg-container-inset transition-colors duration-200"
+  data-controller="category-row"
+  data-category-row-category-id-value="<%= category.id %>"
+  data-category-row-update-url-value="<%= category_path(category) %>"
+  data-action="mouseenter->category-row#showActions mouseleave->category-row#hideActions"
+>
+  <!-- Expand/collapse chevron for parent categories -->
+  <% if category.subcategories.any? %>
+    <button 
+      class="flex-shrink-0 text-subdued hover:text-secondary transition-colors duration-200"
+      data-action="click->category-row#toggleExpanded"
+    >
+      <%= icon "chevron-right", size: "sm", class: "transition-transform duration-200", data: { "category-row-target": "chevron" } %>
+    </button>
+  <% else %>
+    <div class="flex-shrink-0 w-4"></div>
+  <% end %>
+
+  <!-- Unified badge display (icon + color background) -->
+  <div class="flex-shrink-0 flex items-center gap-2">
+    <% if category.subcategory? %>
+      <span style="color: <%= sanitize(category.color) %>">
+        <%= icon "corner-down-right", size: "sm", color: "current" %>
+      </span>
+    <% end %>
+    
+    <span 
+      class="flex items-center justify-center w-8 h-8 rounded-full border"
+      style="
+        background-color: color-mix(in oklab, <%= sanitize(category.color) %> 10%, transparent);
+        border-color: color-mix(in oklab, <%= sanitize(category.color) %> 10%, transparent);
+        color: <%= sanitize(category.color) %>;
+      "
+    >
+      <% if category.lucide_icon.present? %>
+        <%= icon category.lucide_icon, size: "sm", color: "current" %>
+      <% end %>
+    </span>
+  </div>
+
+  <!-- Editable name field -->
+  <div class="flex-1 min-w-0">
+    <div 
+      class="text-sm text-primary cursor-pointer hover:text-secondary transition-colors duration-200 py-0.5 leading-5"
+      data-category-row-target="nameDisplay"
+      data-action="click->category-row#startEdit keydown->category-row#handleNameKeydown"
+      role="button"
+      tabindex="0"
+      aria-label="Edit category name: <%= category.name %>"
+    >
+      <%= category.name %>
+    </div>
+    
+    <input 
+      type="text"
+      class="hidden w-full text-sm text-primary bg-transparent border-none outline-none focus:ring-0 leading-5"
+      <%# Direct style padding is to override base tailwind style applied to input[type=text] %>
+      style="padding: 0 !important;"
+      data-category-row-target="nameInput"
+      data-action="keydown->category-row#handleKeydown blur->category-row#handleBlur"
+      value="<%= category.name %>"
+    />
+  </div>
+
+  <!-- Hover-revealed action buttons -->
+  <div 
+    class="flex items-center gap-1 opacity-0 transition-opacity duration-200"
+    data-category-row-target="actionsContainer"
+  >
+    <!-- Add button for parent categories (those without a parent) -->
+    <% unless category.subcategory? %>
+      <button 
+        class="flex items-center justify-center w-6 h-6 text-subdued hover:text-secondary hover:bg-container rounded transition-colors duration-200"
+        data-category-row-target="addButton"
+        data-action="click->category-row#addSubcategory"
+        title="Add subcategory"
+        aria-label="Add subcategory to <%= category.name %>"
+      >
+        <%= icon "plus", size: "xs" %>
+      </button>
+    <% end %>
+
+    <!-- Delete button -->
+    <button 
+      class="flex items-center justify-center w-6 h-6 text-subdued hover:text-destructive hover:bg-container rounded transition-colors duration-200"
+      data-category-row-target="deleteButton"
+      data-action="click->category-row#deleteCategory"
+      title="Delete category"
+      aria-label="Delete category <%= category.name %>"
+    >
+      <%= icon "trash-2", size: "xs" %>
+    </button>
+  </div>
+</div>
